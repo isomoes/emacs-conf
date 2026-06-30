@@ -11,11 +11,13 @@
 ;;   which-key       - popup of available keys (built into Emacs 30)
 ;;   vertico+orderless+marginalia+consult - live fuzzy minibuffer completion
 ;;
-;; The rest is a small pile of sane built-in defaults plus the SPC leader map.
+;; The rest is a small pile of sane built-in defaults. All keybindings live in
+;; keymaps.el (loaded at the end of this file).
 ;;
 ;; Layout:
 ;;   early-init.el  - UI/startup tuning (runs first)
-;;   init.el        - this file
+;;   init.el        - this file: packages + defaults
+;;   keymaps.el     - the SPC leader map + global override keys
 ;;   themes/        - the github-dark-colorblind theme (ported from nvim)
 
 ;;; Code:
@@ -140,27 +142,6 @@
   :config
   (evil-collection-init))
 
-;; Window jumps without the `C-w' prefix (tmux-navigator style). Bound in
-;; normal/visual/motion states only — NOT insert — so `C-h' stays backspace,
-;; `C-j' stays newline, and `C-k' stays evil-insert-digraph while typing. The
-;; lost `C-h' help prefix is still on `<f1>' (and `SPC h'). `C-w h/j/k/l' and
-;; `SPC w h/j/k/l' continue to work too.
-;;
-;; Use general's `override' keymap (not `evil-global-set-key'): several
-;; evil-collection modes rebind `C-j'/`C-k' as next/prev-item in their own
-;; mode maps (e.g. xref, where they scroll the results list), and those
-;; buffer-local maps outrank the global state maps. `override' sits above
-;; them, so the window jumps win everywhere — the same mechanism that makes
-;; the `SPC' leader work in those buffers.
-(with-eval-after-load 'general
-  (general-define-key
-   :states '(normal visual motion)
-   :keymaps 'override
-   "C-h" #'windmove-left
-   "C-j" #'windmove-down
-   "C-k" #'windmove-up
-   "C-l" #'windmove-right))
-
 ;;; ----------------------------------------------------------------------------
 ;;; which-key — discoverable keybinding popup (built-in on Emacs 30)
 ;;; ----------------------------------------------------------------------------
@@ -193,7 +174,7 @@
 (use-package marginalia
   :init (marginalia-mode 1))
 
-;; Practical search/navigation commands; wired into the leader map below.
+;; Practical search/navigation commands; wired into the leader map (see keymaps.el).
 (use-package consult
   :config
   ;; Use ripgrep's PCRE2 engine for `SPC s p' — lookaround, backreferences,
@@ -202,134 +183,12 @@
     (setq consult-ripgrep-args (concat consult-ripgrep-args " --pcre2"))))
 
 ;;; ----------------------------------------------------------------------------
-;;; Leader key (SPC) via general
+;;; general — leader-key definer + `override' keymap
 ;;; ----------------------------------------------------------------------------
 
-(use-package general
-  :config
-  (general-create-definer my/leader
-    :states '(normal insert visual motion emacs)
-    :keymaps 'override
-    :prefix "SPC"
-    :global-prefix "M-SPC")            ; reach the leader from insert/other states via
-                                       ; M-SPC (SPC still self-inserts there). M-SPC, not
-                                       ; C-SPC, keeps set-mark free — but note some desktops
-                                       ; grab Alt+SPC (KDE/GNOME); rebind there if it's eaten.
-
-  (my/leader
-    "SPC" '(project-find-file       :which-key "find file in project")
-    ":"   '(execute-extended-command :which-key "M-x")
-    ";"   '(eval-expression         :which-key "eval")
-    "."   '(find-file               :which-key "find file")
-    ","   '(consult-buffer          :which-key "switch buffer")
-    "!"   '(shell-command           :which-key "shell command")
-    "u"   '(universal-argument      :which-key "C-u")
-
-    ;; buffers
-    "b"   '(:ignore t :which-key "buffer")
-    "bb"  '(switch-to-buffer        :which-key "switch")
-    "bd"  '(kill-current-buffer     :which-key "kill")
-    "bn"  '(next-buffer             :which-key "next")
-    "bp"  '(previous-buffer         :which-key "prev")
-    "br"  '(revert-buffer           :which-key "revert")
-    "bs"  '(scratch-buffer          :which-key "scratch")
-
-    ;; files
-    "f"   '(:ignore t :which-key "file")
-    "ff"  '(find-file               :which-key "find")
-    "fs"  '(save-buffer             :which-key "save")
-    "fS"  '(write-file              :which-key "save as")
-    "fr"  '(recentf-open-files      :which-key "recent")
-    "fR"  '(rename-visited-file     :which-key "rename")
-
-    ;; windows
-    "w"   '(:ignore t :which-key "window")
-    "wv"  '(split-window-right      :which-key "split right")
-    "ws"  '(split-window-below      :which-key "split below")
-    "wd"  '(delete-window           :which-key "delete")
-    "wo"  '(delete-other-windows    :which-key "only")
-    "ww"  '(other-window            :which-key "other")
-    "wh"  '(windmove-left           :which-key "left")
-    "wj"  '(windmove-down           :which-key "down")
-    "wk"  '(windmove-up             :which-key "up")
-    "wl"  '(windmove-right          :which-key "right")
-    "w="  '(balance-windows         :which-key "balance")
-    "wu"  '(winner-undo             :which-key "undo layout")
-    "wU"  '(winner-redo             :which-key "redo layout")
-
-    ;; search
-    "s"   '(:ignore t :which-key "search")
-    "ss"  '(consult-line            :which-key "in buffer")
-    "so"  '(occur                   :which-key "occur")
-    "sp"  '(consult-ripgrep         :which-key "in project (rg)")
-    "si"  '(consult-imenu           :which-key "imenu")
-
-    ;; project (built-in project.el)
-    "p"   '(:ignore t :which-key "project")
-    "pp"  '(project-switch-project   :which-key "switch")
-    "pf"  '(project-find-file        :which-key "find file")
-    "pb"  '(project-switch-to-buffer :which-key "buffer")
-    "pg"  '(project-find-regexp      :which-key "grep")
-    "pd"  '(project-dired            :which-key "dired")
-
-    ;; code
-    "c"   '(:ignore t :which-key "code")
-    "cc"  '(comment-line            :which-key "comment line")
-    "cd"  '(comment-dwim            :which-key "comment dwim")
-
-    ;; git (built-in vc; swap to magit once you install it)
-    "g"   '(:ignore t :which-key "git")
-    "gg"  '(vc-dir                  :which-key "vc-dir")
-    "gb"  '(vc-annotate             :which-key "blame")
-
-    ;; toggles
-    "t"   '(:ignore t :which-key "toggle")
-    "tl"  '(display-line-numbers-mode :which-key "line numbers")
-    "tw"  '(visual-line-mode        :which-key "word wrap")
-    "tt"  '(my/load-theme           :which-key "load theme")
-
-    ;; help
-    "h"   '(:ignore t :which-key "help")
-    "hf"  '(describe-function       :which-key "function")
-    "hv"  '(describe-variable       :which-key "variable")
-    "hk"  '(describe-key            :which-key "key")
-    "hm"  '(describe-mode           :which-key "mode")
-    "ho"  '(describe-symbol         :which-key "symbol")
-    "hi"  '(info                    :which-key "info browser")
-    "hR"  '(info-display-manual     :which-key "read a manual")
-
-    ;; quit / restart
-    "q"   '(:ignore t :which-key "quit")
-    "qq"  '(save-buffers-kill-terminal :which-key "quit")
-    "qr"  '(restart-emacs           :which-key "restart")))
-
-;;; ----------------------------------------------------------------------------
-;;; Text zoom — browser-style C-= / C-+ (in), C-- (out), C-0 (reset)
-;;; ----------------------------------------------------------------------------
-
-;; `text-scale-*' rescales the CURRENT buffer's text only (a buffer-local face
-;; remap) — switch buffers and the new one is at its normal size. Want the whole
-;; frame (every buffer + modeline + the default face) to zoom at once, like a
-;; real browser? Swap the three commands below for `global-text-scale-adjust'
-;; (Emacs 28+): "C-=" -> (lambda () (interactive) (global-text-scale-adjust 1)),
-;; "C--" -> -1, "C-0" -> 0.
-;;
-;; Bound via general's `override' map in every state so the keys win over evil
-;; and evil-collection mode maps. Note this shadows `C-0' and `C--' (digit- and
-;; negative-argument) — reach prefix args via `C-u' or `M-<digit>' instead.
-(defun my/text-scale-reset ()
-  "Reset the current buffer's text scale to the default size."
-  (interactive)
-  (text-scale-set 0))
-
-(with-eval-after-load 'general
-  (general-define-key
-   :states '(normal insert visual motion emacs)
-   :keymaps 'override
-   "C-=" #'text-scale-increase     ; zoom in
-   "C-+" #'text-scale-increase     ; zoom in (Shift+= on most layouts)
-   "C--" #'text-scale-decrease     ; zoom out
-   "C-0" #'my/text-scale-reset))   ; back to default
+;; Install/load general here; the actual bindings — the `SPC' leader map and the
+;; global `override' keys — live in keymaps.el, loaded at the end of this file.
+(use-package general)
 
 ;;; ----------------------------------------------------------------------------
 ;;; Theme — github-dark-colorblind (a 1:1 port of the nvim colorscheme)
@@ -354,9 +213,17 @@
   (load-theme theme t))
 
 ;;; ----------------------------------------------------------------------------
+;;; Keybindings — the SPC leader map + global overrides (keymaps.el)
+;;; ----------------------------------------------------------------------------
+
+;; Loaded last so `general' and every command these keys point at (including
+;; `my/load-theme' above) are already defined by the time the bindings run.
+(load (expand-file-name "keymaps.el" user-emacs-directory) nil 'nomessage)
+
+;;; ----------------------------------------------------------------------------
 ;;; Add your own packages / bindings below.
 ;;; ----------------------------------------------------------------------------
-;; Popular next steps (all play nicely with the leader map above):
+;; Popular next steps (all play nicely with the leader map in keymaps.el):
 ;;   magit          - then rebind "gg" -> magit-status
 ;;   corfu + cape   - in-buffer (as-you-type) completion
 ;; The ported theme already styles these.
