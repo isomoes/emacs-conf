@@ -145,12 +145,21 @@
 ;; `C-j' stays newline, and `C-k' stays evil-insert-digraph while typing. The
 ;; lost `C-h' help prefix is still on `<f1>' (and `SPC h'). `C-w h/j/k/l' and
 ;; `SPC w h/j/k/l' continue to work too.
-(with-eval-after-load 'evil
-  (dolist (state '(normal visual motion))
-    (evil-global-set-key state (kbd "C-h") #'windmove-left)
-    (evil-global-set-key state (kbd "C-j") #'windmove-down)
-    (evil-global-set-key state (kbd "C-k") #'windmove-up)
-    (evil-global-set-key state (kbd "C-l") #'windmove-right)))
+;;
+;; Use general's `override' keymap (not `evil-global-set-key'): several
+;; evil-collection modes rebind `C-j'/`C-k' as next/prev-item in their own
+;; mode maps (e.g. xref, where they scroll the results list), and those
+;; buffer-local maps outrank the global state maps. `override' sits above
+;; them, so the window jumps win everywhere — the same mechanism that makes
+;; the `SPC' leader work in those buffers.
+(with-eval-after-load 'general
+  (general-define-key
+   :states '(normal visual motion)
+   :keymaps 'override
+   "C-h" #'windmove-left
+   "C-j" #'windmove-down
+   "C-k" #'windmove-up
+   "C-l" #'windmove-right))
 
 ;;; ----------------------------------------------------------------------------
 ;;; which-key — discoverable keybinding popup (built-in on Emacs 30)
