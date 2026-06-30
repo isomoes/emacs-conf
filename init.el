@@ -140,6 +140,18 @@
   :config
   (evil-collection-init))
 
+;; Window jumps without the `C-w' prefix (tmux-navigator style). Bound in
+;; normal/visual/motion states only — NOT insert — so `C-h' stays backspace,
+;; `C-j' stays newline, and `C-k' stays evil-insert-digraph while typing. The
+;; lost `C-h' help prefix is still on `<f1>' (and `SPC h'). `C-w h/j/k/l' and
+;; `SPC w h/j/k/l' continue to work too.
+(with-eval-after-load 'evil
+  (dolist (state '(normal visual motion))
+    (evil-global-set-key state (kbd "C-h") #'windmove-left)
+    (evil-global-set-key state (kbd "C-j") #'windmove-down)
+    (evil-global-set-key state (kbd "C-k") #'windmove-up)
+    (evil-global-set-key state (kbd "C-l") #'windmove-right)))
+
 ;;; ----------------------------------------------------------------------------
 ;;; which-key — discoverable keybinding popup (built-in on Emacs 30)
 ;;; ----------------------------------------------------------------------------
