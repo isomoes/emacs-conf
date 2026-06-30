@@ -173,7 +173,12 @@
   :init (marginalia-mode 1))
 
 ;; Practical search/navigation commands; wired into the leader map below.
-(use-package consult)
+(use-package consult
+  :config
+  ;; Use ripgrep's PCRE2 engine for `SPC s p' — lookaround, backreferences,
+  ;; non-greedy, \d/\w, etc. (your rg is built with +pcre2). Idempotent.
+  (unless (string-match-p "--pcre2" consult-ripgrep-args)
+    (setq consult-ripgrep-args (concat consult-ripgrep-args " --pcre2"))))
 
 ;;; ----------------------------------------------------------------------------
 ;;; Leader key (SPC) via general
