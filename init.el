@@ -3,16 +3,15 @@
 ;;; Commentary:
 ;;
 ;; Vim keybindings in Emacs, rolled by hand instead of via a framework.
-;; The whole "Vim experience" is four packages:
+;; Core packages:
 ;;
 ;;   evil            - the Vim emulation (normal/insert/visual states, motions)
 ;;   evil-collection - Vim keys in dired, magit, help, *Messages*, etc.
 ;;   general         - clean `SPC' leader-key definitions (Doom-style)
 ;;   which-key       - popup of available keys (built into Emacs 30)
+;;   vertico+orderless+marginalia+consult - live fuzzy minibuffer completion
 ;;
-;; Everything below that is a small pile of sane built-in defaults and a
-;; leader map bound only to *built-in* commands, so nothing here breaks if
-;; you never install another package. Add more under the marked sections.
+;; The rest is a small pile of sane built-in defaults plus the SPC leader map.
 ;;
 ;; Layout:
 ;;   early-init.el  - UI/startup tuning (runs first)
@@ -90,7 +89,7 @@
 (save-place-mode 1)
 
 ;; Editor niceties.
-(setq display-line-numbers-type t)      ; absolute; set to `relative' for vim-style
+(setq display-line-numbers-type 'relative) ; relative (vim-style); set to t for absolute
 ;; Numbers in code/prose buffers only — not dired, *Help*, terminals, images, etc.
 (dolist (hook '(prog-mode-hook text-mode-hook conf-mode-hook))
   (add-hook hook #'display-line-numbers-mode))
@@ -152,6 +151,31 @@
   (which-key-mode 1))
 
 ;;; ----------------------------------------------------------------------------
+;;; Completion UI — vertico + orderless + marginalia + consult
+;;; ----------------------------------------------------------------------------
+
+;; Vertical, live-filtering minibuffer for every completing-read (find-file,
+;; switch-buffer, M-x, ...). `savehist-mode' (above) makes its history persist.
+(use-package vertico
+  :init (vertico-mode 1))
+
+(use-package orderless
+  :init
+  ;; Space-separated, order-free substring matching: "ini cfg" matches init.el
+  ;; in config/. For files, orderless (fuzzy) AND partial-completion (so the
+  ;; /u/s/b path shorthand and ~/ expansion still work).
+  (setq completion-styles '(orderless basic)
+        completion-category-defaults nil
+        completion-category-overrides '((file (styles orderless partial-completion)))))
+
+;; Annotations (file sizes, docstrings, key bindings) in the margin.
+(use-package marginalia
+  :init (marginalia-mode 1))
+
+;; Practical search/navigation commands; wired into the leader map below.
+(use-package consult)
+
+;;; ----------------------------------------------------------------------------
 ;;; Leader key (SPC) via general
 ;;; ----------------------------------------------------------------------------
 
@@ -171,7 +195,7 @@
     ":"   '(execute-extended-command :which-key "M-x")
     ";"   '(eval-expression         :which-key "eval")
     "."   '(find-file               :which-key "find file")
-    ","   '(switch-to-buffer        :which-key "switch buffer")
+    ","   '(consult-buffer          :which-key "switch buffer")
     "!"   '(shell-command           :which-key "shell command")
     "u"   '(universal-argument      :which-key "C-u")
 
@@ -209,9 +233,10 @@
 
     ;; search
     "s"   '(:ignore t :which-key "search")
-    "ss"  '(isearch-forward         :which-key "in buffer")
+    "ss"  '(consult-line            :which-key "in buffer")
     "so"  '(occur                   :which-key "occur")
-    "sp"  '(project-find-regexp     :which-key "in project")
+    "sp"  '(consult-ripgrep         :which-key "in project (rg)")
+    "si"  '(consult-imenu           :which-key "imenu")
 
     ;; project (built-in project.el)
     "p"   '(:ignore t :which-key "project")
@@ -276,10 +301,9 @@
 ;;; Add your own packages / bindings below.
 ;;; ----------------------------------------------------------------------------
 ;; Popular next steps (all play nicely with the leader map above):
-;;   vertico + orderless + marginalia + consult  - completion UI
-;;   magit                                        - then rebind "gg" -> magit-status
-;;   corfu + cape                                 - in-buffer completion
-;; The ported theme already styles all of these.
+;;   magit          - then rebind "gg" -> magit-status
+;;   corfu + cape   - in-buffer (as-you-type) completion
+;; The ported theme already styles these.
 
 (provide 'init)
 ;;; init.el ends here
