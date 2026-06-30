@@ -295,11 +295,41 @@
     "hk"  '(describe-key            :which-key "key")
     "hm"  '(describe-mode           :which-key "mode")
     "ho"  '(describe-symbol         :which-key "symbol")
+    "hi"  '(info                    :which-key "info browser")
+    "hR"  '(info-display-manual     :which-key "read a manual")
 
     ;; quit / restart
     "q"   '(:ignore t :which-key "quit")
     "qq"  '(save-buffers-kill-terminal :which-key "quit")
     "qr"  '(restart-emacs           :which-key "restart")))
+
+;;; ----------------------------------------------------------------------------
+;;; Text zoom — browser-style C-= / C-+ (in), C-- (out), C-0 (reset)
+;;; ----------------------------------------------------------------------------
+
+;; `text-scale-*' rescales the CURRENT buffer's text only (a buffer-local face
+;; remap) — switch buffers and the new one is at its normal size. Want the whole
+;; frame (every buffer + modeline + the default face) to zoom at once, like a
+;; real browser? Swap the three commands below for `global-text-scale-adjust'
+;; (Emacs 28+): "C-=" -> (lambda () (interactive) (global-text-scale-adjust 1)),
+;; "C--" -> -1, "C-0" -> 0.
+;;
+;; Bound via general's `override' map in every state so the keys win over evil
+;; and evil-collection mode maps. Note this shadows `C-0' and `C--' (digit- and
+;; negative-argument) — reach prefix args via `C-u' or `M-<digit>' instead.
+(defun my/text-scale-reset ()
+  "Reset the current buffer's text scale to the default size."
+  (interactive)
+  (text-scale-set 0))
+
+(with-eval-after-load 'general
+  (general-define-key
+   :states '(normal insert visual motion emacs)
+   :keymaps 'override
+   "C-=" #'text-scale-increase     ; zoom in
+   "C-+" #'text-scale-increase     ; zoom in (Shift+= on most layouts)
+   "C--" #'text-scale-decrease     ; zoom out
+   "C-0" #'my/text-scale-reset))   ; back to default
 
 ;;; ----------------------------------------------------------------------------
 ;;; Theme — github-dark-colorblind (a 1:1 port of the nvim colorscheme)
