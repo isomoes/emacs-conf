@@ -1,0 +1,25 @@
+# Emacs-generated / runtime state — only the hand-written config is tracked.
+/elpa/
+/eln-cache/
+/auto-save/
+/auto-save-list/
+/backups/
+/transient/
+/var/
+/.cache/
+/url/
+/request/
+/custom.el
+/history
+/places
+/projects
+/recentf
+/savehist
+/network-security.data
+/tramp
+
+# Byte-compiled / backup / lock files
+*.elc
+*~
+\#*\#
+.\#*
