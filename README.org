@@ -1,0 +1,37 @@
+#+title: emacs-conf
+#+options: toc:nil num:nil
+
+A minimal, hand-rolled Emacs config with Vim keybindings — no framework.
+
+Built on [[https://github.com/emacs-evil/evil][evil]] and [[https://github.com/emacs-evil/evil-collection][evil-collection]] (Vim keys everywhere, incl. dired/magit/help), a [[https://github.com/noctuid/general.el][general]] ~SPC~ leader (Doom-style), built-in ~which-key~, and a completion UI ([[https://github.com/minad/vertico][vertico]], ~orderless~, ~marginalia~, [[https://github.com/minad/consult][consult]]) for live fuzzy matching. Everything else is sane built-in defaults.
+
+* Layout
+
+| File            | Role                                                                     |
+|-----------------+--------------------------------------------------------------------------|
+| =early-init.el= | UI/startup tuning; runs first, before =package.el= and the first frame   |
+| =init.el=       | package bootstrap, defaults, evil, completion UI, theme                  |
+| =keymaps.el=    | ~SPC~ leader map + global override keys (loaded last)                    |
+| =themes/=       | ~github-dark-colorblind~ — a 1:1 ~autothemer~ port of the nvim colorscheme |
+
+* Install
+
+Requires *Emacs 30+* (ships ~use-package~ and ~which-key~).
+
+#+begin_src sh
+git clone https://github.com/isomoes/emacs-conf.git ~/.config/emacs
+#+end_src
+
+#+begin_quote
+Emacs prefers =~/.emacs.d= / =~/.emacs= over =~/.config/emacs= and will silently shadow this config if either exists — =early-init.el= warns loudly if it isn't loading from =~/.config/emacs=.
+#+end_quote
+
+First launch installs packages from MELPA (plus gnu/nongnu ELPA) and native-compiles them.
+
+* Leader keys
+
+~SPC~ in normal/visual, ~M-SPC~ in insert — press and wait for the ~which-key~ popup. ~SPC SPC~ finds a file in the project.
+
+Groups: ~f~ file · ~b~ buffer · ~w~ window · ~s~ search · ~p~ project · ~c~ code · ~g~ git · ~t~ toggle · ~h~ help · ~q~ quit. Bindings mix built-in commands with ~consult~ (buffer/line/ripgrep/imenu) and built-in ~vc~ for git.
+
+Beyond the leader, =keymaps.el= binds ~C-hjkl~ window jumps (tmux-navigator style) and, in every state, zoom (~C-=~, ~C--~, ~C-0~) and save (~C-s~).
