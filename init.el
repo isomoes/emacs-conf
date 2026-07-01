@@ -11,12 +11,14 @@
 ;;   which-key       - popup of available keys (built into Emacs 30)
 ;;   vertico+orderless+marginalia+consult - live fuzzy minibuffer completion
 ;;
-;; The rest is a small pile of sane built-in defaults. All keybindings live in
-;; keymaps.el (loaded at the end of this file).
+;; The rest is a small pile of sane built-in defaults. Each plugin lives in its
+;; own file under lisp/; all keybindings live in keymaps.el.
 ;;
 ;; Layout:
 ;;   early-init.el  - UI/startup tuning (runs first)
-;;   init.el        - this file: packages + defaults
+;;   init.el        - this file: package bootstrap + built-in defaults, then
+;;                    loads each plugin file under lisp/, then keymaps.el
+;;   lisp/          - one file per plugin/concern (evil, completion, magit, ...)
 ;;   keymaps.el     - the SPC leader map + global override keys
 ;;   themes/        - the github-dark-colorblind theme (ported from nvim)
 
@@ -130,113 +132,36 @@
 (isomoes/set-default-font)                   ; the initial (non-daemon) frame
 
 ;;; ----------------------------------------------------------------------------
-;;; Evil — the actual Vim emulation
+;;; Plugins — one file per concern under lisp/
 ;;; ----------------------------------------------------------------------------
 
-(use-package evil
-  :init
-  ;; MUST be set before evil loads so evil-collection can take over the rest.
-  (setq evil-want-keybinding nil
-        evil-want-integration t
-        evil-want-C-u-scroll t          ; C-u scrolls (like Vim) instead of prefix-arg
-        evil-want-Y-yank-to-eol t
-        evil-undo-system 'undo-redo     ; built-in undo-redo (Emacs 28+); C-r redoes
-        evil-split-window-below t
-        evil-vsplit-window-right t
-        evil-search-module 'evil-search)
-  :config
-  (evil-mode 1))
-;; Note: `j'/`k' move by logical lines (pure Vim). Use `gj'/`gk' to move by
-;; visual (wrapped) lines — both are bound out of the box by evil.
-
-(use-package evil-collection
-  :after evil
-  :config
-  (evil-collection-init))
-
-;;; ----------------------------------------------------------------------------
-;;; which-key — discoverable keybinding popup (built-in on Emacs 30)
-;;; ----------------------------------------------------------------------------
-
-(use-package which-key
-  :ensure nil                           ; bundled with Emacs 30; don't fetch from ELPA
-  :config
-  (setq which-key-idle-delay 0.3)
-  (which-key-mode 1))
-
-;;; ----------------------------------------------------------------------------
-;;; Completion UI — vertico + orderless + marginalia + consult
-;;; ----------------------------------------------------------------------------
-
-;; Vertical, live-filtering minibuffer for every completing-read (find-file,
-;; switch-buffer, M-x, ...). `savehist-mode' (above) makes its history persist.
-(use-package vertico
-  :init (vertico-mode 1))
-
-(use-package orderless
-  :init
-  ;; Space-separated, order-free substring matching: "ini cfg" matches init.el
-  ;; in config/. For files, orderless (fuzzy) AND partial-completion (so the
-  ;; /u/s/b path shorthand and ~/ expansion still work).
-  (setq completion-styles '(orderless basic)
-        completion-category-defaults nil
-        completion-category-overrides '((file (styles orderless partial-completion)))))
-
-;; Annotations (file sizes, docstrings, key bindings) in the margin.
-(use-package marginalia
-  :init (marginalia-mode 1))
-
-;; Practical search/navigation commands; wired into the leader map (see keymaps.el).
-(use-package consult
-  :config
-  ;; Use ripgrep's PCRE2 engine for `SPC s p' — lookaround, backreferences,
-  ;; non-greedy, \d/\w, etc. (your rg is built with +pcre2). Idempotent.
-  (unless (string-match-p "--pcre2" consult-ripgrep-args)
-    (setq consult-ripgrep-args (concat consult-ripgrep-args " --pcre2"))))
-
-;;; ----------------------------------------------------------------------------
-;;; general — leader-key definer + `override' keymap
-;;; ----------------------------------------------------------------------------
-
-;; Install/load general here; the actual bindings — the `SPC' leader map and the
-;; global `override' keys — live in keymaps.el, loaded at the end of this file.
-(use-package general)
-
-;;; ----------------------------------------------------------------------------
-;;; Theme — github-dark-colorblind (a 1:1 port of the nvim colorscheme)
-;;; ----------------------------------------------------------------------------
-
-;; The theme is generated with autothemer, so it needs that package available.
-(use-package autothemer)
-
-(add-to-list 'custom-theme-load-path
-             (expand-file-name "themes/" user-emacs-directory))
-(setq custom-safe-themes t)             ; personal config: don't prompt on load
-(load-theme 'github-dark-colorblind t)
-
-;; `SPC t t' switch: disable the current theme first so themes don't stack into
-;; a muddy mix (bare `load-theme' layers them).
-(defun isomoes/load-theme (theme)
-  "Disable all enabled themes, then load THEME."
-  (interactive
-   (list (intern (completing-read
-                  "Theme: " (mapcar #'symbol-name (custom-available-themes))))))
-  (mapc #'disable-theme custom-enabled-themes)
-  (load-theme theme t))
+;; Each external package is configured in its own file under lisp/. They are
+;; `load'ed by explicit path, in order, rather than added to `load-path' and
+;; `require'd: files named lisp/evil.el and lisp/general.el would otherwise
+;; SHADOW the real `evil'/`general' packages whenever something calls
+;; `(require 'evil)'. Order matters — evil first; all before keymaps.el below.
+(dolist (module '("evil"          ; Vim emulation: evil + evil-collection
+                  "which-key"     ; keybinding popup
+                  "completion"    ; vertico + orderless + marginalia + consult
+                  "general"       ; SPC leader-key definer
+                  "theme"))       ; github-dark-colorblind + SPC t t switcher
+  (load (expand-file-name (format "lisp/%s" module) user-emacs-directory)
+        nil 'nomessage))
 
 ;;; ----------------------------------------------------------------------------
 ;;; Keybindings — the SPC leader map + global overrides (keymaps.el)
 ;;; ----------------------------------------------------------------------------
 
 ;; Loaded last so `general' and every command these keys point at (including
-;; `isomoes/load-theme' above) are already defined by the time the bindings run.
+;; `isomoes/load-theme' from lisp/theme.el) are already defined by the time the
+;; bindings run.
 (load (expand-file-name "keymaps.el" user-emacs-directory) nil 'nomessage)
 
 ;;; ----------------------------------------------------------------------------
 ;;; Add your own packages / bindings below.
 ;;; ----------------------------------------------------------------------------
+;; New plugins go in their own file under lisp/ and get added to the list above.
 ;; Popular next steps (all play nicely with the leader map in keymaps.el):
-;;   magit          - then rebind "gg" -> magit-status
 ;;   corfu + cape   - in-buffer (as-you-type) completion
 ;; The ported theme already styles these.
 
