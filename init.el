@@ -76,6 +76,18 @@
         version-control t
         kept-new-versions 6
         kept-old-versions 2))
+
+;; Auto-save more eagerly than the stock defaults — this is the whole point of
+;; auto-saving (the "Auto Save" node of the Emacs manual). Emacs auto-saves a
+;; buffer after `auto-save-interval' keystrokes OR `auto-save-timeout' seconds
+;; idle, whichever comes first; lowering both trades a little disk churn for
+;; losing less work on a crash. Enabled per-buffer via `auto-save-default' (no
+;; global mode call needed); the files land in `auto-save/' (transforms above).
+(setq auto-save-default t                ; auto-save every file-visiting buffer
+      auto-save-interval 200             ; ...every 200 keystrokes (default 300)
+      auto-save-timeout 20               ; ...or after 20s idle (default 30)
+      auto-save-no-message nil)          ; show "Auto-saving..."; set t to silence
+
 (setq custom-file (expand-file-name "custom.el" user-emacs-directory))
 (when (file-exists-p custom-file)
   (load custom-file nil 'nomessage))
