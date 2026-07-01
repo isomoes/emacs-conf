@@ -24,7 +24,7 @@
 ;;; Leader key (SPC)
 ;;; ----------------------------------------------------------------------------
 
-(general-create-definer my/leader
+(general-create-definer isomoes/leader
   :states '(normal insert visual motion emacs)
   :keymaps 'override
   :prefix "SPC"
@@ -33,7 +33,7 @@
                                        ; C-SPC, keeps set-mark free — but note some desktops
                                        ; grab Alt+SPC (KDE/GNOME); rebind there if it's eaten.
 
-(my/leader
+(isomoes/leader
   "SPC" '(project-find-file       :which-key "find file in project")
   ":"   '(execute-extended-command :which-key "M-x")
   ";"   '(eval-expression         :which-key "eval")
@@ -103,7 +103,7 @@
   "t"   '(:ignore t :which-key "toggle")
   "tl"  '(display-line-numbers-mode :which-key "line numbers")
   "tw"  '(visual-line-mode        :which-key "word wrap")
-  "tt"  '(my/load-theme           :which-key "load theme")
+  "tt"  '(isomoes/load-theme           :which-key "load theme")
 
   ;; help
   "h"   '(:ignore t :which-key "help")
@@ -113,7 +113,7 @@
   "hm"  '(describe-mode           :which-key "mode")
   "ho"  '(describe-symbol         :which-key "symbol")
   "hi"  '(info                    :which-key "info browser")
-  "hR"  '(info-display-manual     :which-key "read a manual")
+  "hr"  '(info-display-manual     :which-key "read a manual")
 
   ;; quit / restart
   "q"   '(:ignore t :which-key "quit")
@@ -150,7 +150,7 @@
 ;; `SPC s s', `SPC s o'; `M-x isearch-forward' still works; `SPC f s' also
 ;; saves).  In a TTY (`emacs -nw') the terminal may eat `C-s' as flow-control
 ;; (XOFF/freeze) — a non-issue in GUI/`emacsclient' frames.
-(defun my/text-scale-reset ()
+(defun isomoes/text-scale-reset ()
   "Reset the current buffer's text scale to the default size."
   (interactive)
   (text-scale-set 0))
@@ -161,7 +161,7 @@
  "C-=" #'text-scale-increase     ; zoom in
  "C-+" #'text-scale-increase     ; zoom in (Shift+= on most layouts)
  "C--" #'text-scale-decrease     ; zoom out
- "C-0" #'my/text-scale-reset     ; reset zoom
+ "C-0" #'isomoes/text-scale-reset     ; reset zoom
  "C-s" #'save-buffer)            ; save file
 
 (provide 'keymaps)

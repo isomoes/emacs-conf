@@ -108,14 +108,14 @@
 ;; also reaches GUI frames spawned later by `emacsclient' under a daemon (where
 ;; `display-graphic-p' is nil at init time). No-op on TTY/--batch or if the font
 ;; isn't installed.
-(defun my/set-default-font (&optional frame)
+(defun isomoes/set-default-font (&optional frame)
   "Set the default font on FRAME when it is graphical and the font exists."
   (when (and (display-graphic-p frame)
              (find-font (font-spec :family "JetBrainsMono Nerd Font")))
     (set-face-attribute 'default frame
                         :family "JetBrainsMono Nerd Font" :height 180)))
-(add-hook 'after-make-frame-functions #'my/set-default-font)
-(my/set-default-font)                   ; the initial (non-daemon) frame
+(add-hook 'after-make-frame-functions #'isomoes/set-default-font)
+(isomoes/set-default-font)                   ; the initial (non-daemon) frame
 
 ;;; ----------------------------------------------------------------------------
 ;;; Evil — the actual Vim emulation
@@ -204,7 +204,7 @@
 
 ;; `SPC t t' switch: disable the current theme first so themes don't stack into
 ;; a muddy mix (bare `load-theme' layers them).
-(defun my/load-theme (theme)
+(defun isomoes/load-theme (theme)
   "Disable all enabled themes, then load THEME."
   (interactive
    (list (intern (completing-read
@@ -217,7 +217,7 @@
 ;;; ----------------------------------------------------------------------------
 
 ;; Loaded last so `general' and every command these keys point at (including
-;; `my/load-theme' above) are already defined by the time the bindings run.
+;; `isomoes/load-theme' above) are already defined by the time the bindings run.
 (load (expand-file-name "keymaps.el" user-emacs-directory) nil 'nomessage)
 
 ;;; ----------------------------------------------------------------------------
