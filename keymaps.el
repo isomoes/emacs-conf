@@ -94,10 +94,13 @@
   "cc"  '(comment-line            :which-key "comment line")
   "cd"  '(comment-dwim            :which-key "comment dwim")
 
-  ;; git (built-in vc; swap to magit once you install it)
+  ;; git (magit)
   "g"   '(:ignore t :which-key "git")
-  "gg"  '(vc-dir                  :which-key "vc-dir")
-  "gb"  '(vc-annotate             :which-key "blame")
+  "gg"  '(magit-status            :which-key "status")
+  "gb"  '(magit-blame             :which-key "blame")
+  "gl"  '(magit-log-current       :which-key "log")
+  "gd"  '(magit-dispatch          :which-key "dispatch")
+  "gf"  '(magit-file-dispatch     :which-key "file dispatch")
 
   ;; toggles
   "t"   '(:ignore t :which-key "toggle")

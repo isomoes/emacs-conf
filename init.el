@@ -10,6 +10,7 @@
 ;;   general         - clean `SPC' leader-key definitions (Doom-style)
 ;;   which-key       - popup of available keys (built into Emacs 30)
 ;;   vertico+orderless+marginalia+consult - live fuzzy minibuffer completion
+;;   magit           - the Git porcelain
 ;;
 ;; The rest is a small pile of sane built-in defaults. Each plugin lives in its
 ;; own file under lisp/; all keybindings live in keymaps.el.
@@ -144,6 +145,7 @@
                   "which-key"     ; keybinding popup
                   "completion"    ; vertico + orderless + marginalia + consult
                   "general"       ; SPC leader-key definer
+                  "magit"         ; Git porcelain
                   "theme"))       ; github-dark-colorblind + SPC t t switcher
   (load (expand-file-name (format "lisp/%s" module) user-emacs-directory)
         nil 'nomessage))
